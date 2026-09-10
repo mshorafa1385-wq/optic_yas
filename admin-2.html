@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>پنل مدیریت اپتیک یاس</title>
+<style>
+body{font-family:Tahoma,Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px;color:#222}
+.box{max-width:700px;margin:30px auto;background:#fff;padding:24px;border-radius:18px;box-shadow:0 5px 25px #0001}
+h1{margin-top:0} input,button,textarea{width:100%;box-sizing:border-box;padding:12px;margin:7px 0;border:1px solid #ddd;border-radius:10px;font-size:15px}
+button{background:#111;color:#fff;cursor:pointer}.danger{background:#b00020}.product{border:1px solid #eee;padding:12px;border-radius:12px;margin:10px 0}
+#panel{display:none}.muted{color:#777;font-size:13px}
+</style>
+</head>
+<body>
+<div class="box" id="login">
+<h1>🔐 پنل مدیریت اپتیک یاس</h1>
+<p class="muted">برای ورود، رمز عبور پنل را وارد کنید.</p>
+<input id="pass" type="password" placeholder="رمز عبور">
+<button onclick="login()">ورود به پنل</button>
+<p id="err" style="color:#b00020"></p>
+</div>
+
+<div class="box" id="panel">
+<h1>اپتیک یاس | مدیریت محصولات</h1>
+<input id="name" placeholder="نام محصول">
+<input id="price" placeholder="قیمت">
+<select id="cat" style="width:100%;padding:12px;border-radius:10px;border:1px solid #ddd">
+<option>عینک طبی مردانه</option><option>عینک طبی زنانه</option>
+<option>عینک آفتابی مردانه</option><option>عینک آفتابی زنانه</option>
+</select>
+<textarea id="desc" placeholder="توضیحات محصول"></textarea>
+<input id="img" type="file" accept="image/*">
+<button onclick="addProduct()">➕ افزودن محصول</button>
+<hr>
+<h2>محصولات</h2>
+<div id="products"></div>
+<button class="danger" onclick="logout()">خروج</button>
+</div>
+
+<script>
+const PASSWORD="OpticYas@2026";
+function login(){
+ if(document.getElementById("pass").value===PASSWORD){
+  localStorage.setItem("opticYasAdmin","1");
+  showPanel();
+ }else document.getElementById("err").textContent="رمز عبور اشتباه است.";
+}
+function showPanel(){
+ document.getElementById("login").style.display="none";
+ document.getElementById("panel").style.display="block";
+ render();
+}
+function logout(){
+ localStorage.removeItem("opticYasAdmin");
+ location.reload();
+}
+function addProduct(){
+ const file=document.getElementById("img").files[0];
+ const save=(image="")=>{
+  const p=JSON.parse(localStorage.getItem("opticYasProducts")||"[]");
+  p.push({
+   name:document.getElementById("name").value,
+   price:document.getElementById("price").value,
+   cat:document.getElementById("cat").value,
+   desc:document.getElementById("desc").value,
+   image
+  });
+  localStorage.setItem("opticYasProducts",JSON.stringify(p));
+  document.getElementById("name").value="";
+  document.getElementById("price").value="";
+  document.getElementById("desc").value="";
+  document.getElementById("img").value="";
+  render();
+ };
+ if(file){
+  const r=new FileReader();
+  r.onload=e=>save(e.target.result);
+  r.readAsDataURL(file);
+ }else save();
+}
+function render(){
+ const p=JSON.parse(localStorage.getItem("opticYasProducts")||"[]");
+ document.getElementById("products").innerHTML=p.length?p.map((x,i)=>`
+ <div class="product">${x.image?`<img src="${x.image}" style="width:100%;max-height:220px;object-fit:contain;border-radius:10px">`:""}
+ <b>${x.name||"بدون نام"}</b><br>${x.cat}<br>${x.price||""}
+ <p>${x.desc||""}</p><button class="danger" onclick="del(${i})">حذف</button></div>`).join(""):"هنوز محصولی اضافه نشده است.";
+}
+function del(i){
+ const p=JSON.parse(localStorage.getItem("opticYasProducts")||"[]");
+ p.splice(i,1);localStorage.setItem("opticYasProducts",JSON.stringify(p));render();
+}
+if(localStorage.getItem("opticYasAdmin")==="1")showPanel();
+</script>
+</body>
+</html>
